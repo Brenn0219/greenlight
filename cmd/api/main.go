@@ -12,8 +12,9 @@ import (
 const version = "1.0.0"
 
 type config struct {
-	port int
-	env  string
+	address string
+	port    int
+	env     string
 }
 
 type application struct {
@@ -24,6 +25,7 @@ type application struct {
 func main() {
 	var cfg config
 
+	flag.StringVar(&cfg.address, "address", "localhost", "API server address")
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.Parse()
@@ -35,12 +37,9 @@ func main() {
 		logger: logger,
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.healthcheckHandler)
-
 	srv := &http.Server{
-		Addr:         fmt.Sprintf("%d", cfg.port),
-		Handler:      mux,
+		Addr:         cfg.address + ":" + fmt.Sprintf("%d", cfg.port),
+		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
